@@ -2,15 +2,27 @@
 struct Group {
 }
 impl Group {
-    pub fn merge(&mut self, sequence_nubmer: u16, payload: &[u8]) {
+    pub fn merge(&mut self, sequence_number: u16, payload: &[u8]) {
+        unimplemented!()
+    }
 
+    pub fn is_complete(&self, sequence_number: u16) -> bool {
+        unimplemented!()
+    }
+
+    pub fn sequence_number(&self) -> u16 {
+        unimplemented!()
+    }
+
+    pub fn into_payload(&self) -> Vec<u8> {
+        unimplemented!()
     }
 }
 
 struct RtpFlow {
 }
 impl RtpFlow {
-    fn emit(&mut self, sequence_number:u16, ) {
+    fn emit(&self, sequence_number:u16, payload: Vec<u8>) {
 
     }
 }
@@ -33,20 +45,29 @@ impl FecSession {
     }
 
     fn push(&mut self, sequence_number: u16, payload: Vec<u8>) {
-        let group = self.get_col_group(sequence_number);
-        group.merge(sequence_number, &payload[..]);
+        {
+            let group = self.get_col_group_mut(sequence_number);
+            group.merge(sequence_number, &payload[..]);
+        }
         self.media_flow.emit(sequence_number, payload);
+        let group = self.get_col_group(sequence_number);
         if group.is_complete(sequence_number) {
             self.col_fec_flow.emit(group.sequence_number(), group.into_payload())
         }
     }
 
-    fn get_col_group(&mut self, sequence_number: u16) -> &mut Group {
+    fn get_col_group_mut(&mut self, sequence_number: u16) -> &mut Group {
         let num = self.group_num(sequence_number as usize);
+        unimplemented!()
+    }
+
+    fn get_col_group(&self, sequence_number: u16) -> &Group {
+        let num = self.group_num(sequence_number as usize);
+        unimplemented!()
     }
 
     fn group_num(&self, sequence_number: usize) -> usize {
-        sequence_number % self.cols + sequence_number / self.rows
+        sequence_number % self.cols + (sequence_number / (self.cols * self.rows)) * self.cols
     }
 }
 
@@ -56,9 +77,9 @@ mod tests {
 
     #[test]
     fn test_group_num() {
-        let sess = FecSession::new(4, 5);
-        assert_eq!(0, sess.group_num(0));
-        assert_eq!(4, sess.group_num(19));
-        assert_eq!(5, sess.group_num(19));
+        let sess = FecSession::new(5, 4);
+        assert_eq!(sess.group_num(0), 0);
+        assert_eq!(sess.group_num(19), 3);
+        assert_eq!(sess.group_num(20), 4);
     }
 }
